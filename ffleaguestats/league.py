@@ -22,7 +22,7 @@ class FantasyLeague:
         if download:
             self.download_espn_league_results()
         self.load_league_results()
-        self.player_df = self.build_player_df()
+        self.player_df = self._build_player_df()
 
     """
     ------- DATA INITIALIZATION ------
@@ -130,9 +130,76 @@ class FantasyLeague:
                             continue
         return df
 
+    def _build_player_df(self):
+        sbs = self.scoreboards.copy()
+        bss = self.boxscores.copy()
+
+        # Pick out the basic stats per player, per week, and assign them to a team
+        slots = {0: 'QB', 2: 'RB', 4: 'WR', 6: 'TE',
+                 16: 'D/ST', 17: 'K', 20: 'BE', 23: 'FLEX'}
+
+        # rows will be by player by week
+        df = pd.DataFrame(columns=['playerName', 'matchupPeriodId',
+                                   'slotId', 'position', 'bye', 'appliedStatTotal',
+                                   'teamAbbrev', 'wonMatchup'])
+
+        for week in range(1, 17):
+            week = str(week)
+            for match in range(len(sbs[week]['scoreboard']['matchups'])):
+                # match = str(match)
+                homeId = sbs[week]['scoreboard']['matchups'][match]['teams'][0]['team']['teamId']
+                winner = sbs[week]['scoreboard']['matchups'][match]['winner']
+
+                # loop through home (0) and away (1)
+                for team in range(2):
+                    # boolean for who won this matchup
+                    winb = False
+                    if (winner == 'away' and team == 1) or (winner == 'home' and team == 0):
+                        winb = True
+
+                    # fantasy team info (dict)
+                    # team = str(team)
+                    match_bss = str(match)
+                    tinfo = bss[week][match_bss]['boxscore']['teams'][team]['team']
+
+                    # all players on that team info (array of dicts)
+                    ps = bss[week][match_bss]['boxscore']['teams'][team]['slots']
+
+                    # loop through players
+                    for k, p in enumerate(ps):
+                        # players on bye/injured won't have this entry
+                        try:
+                            pts = p['currentPeriodRealStats']['appliedStatTotal']
+                        except KeyError:
+                            pts = 0
+
+                        # there is some messiness in the json so just skip
+                        try:
+                            # get player's position. this is a bit hacky...
+                            pos = p['player']['eligibleSlotCategoryIds']
+                            for s in [20, 23]:
+                                if pos.count(s) > 0:
+                                    pos.remove(s)
+                            pos = slots[pos[0]]
+
+                            # add it all to the DataFrame
+                            df = df.append({'playerName': p['player']['firstName'] + ' ' + p['player']['lastName'],
+                                            'matchupPeriodId': week,
+                                            'slotId': p['slotCategoryId'],
+                                            'position': pos,
+                                            'bye': True if p['opponentProTeamId'] == -1 else False,
+                                            'appliedStatTotal': pts,
+                                            'teamAbbrev': tinfo['teamAbbrev'],
+                                            'wonMatchup': winb},
+                                           ignore_index=True)
+                        except KeyError:
+                            continue
+        return df
+
     """
     ----- CALCULATIONS ----
     """
+    # def calculate_manager_rankings(self):
 
 
 if __name__ == '__main__':
