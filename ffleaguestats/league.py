@@ -8,10 +8,10 @@ Things I'd need to do outside of it
 import requests
 import json
 import pandas as pd
-
+import matplotlib.pyplot as plt
 
 class FantasyLeague:
-    def __init__(self, league_id, season_id, download=True):
+    def __init__(self, league_id, season_id, current_week=16, download=True):
         # misc init
         self.scoreboards = {}
         self.boxscores = {}
@@ -20,13 +20,14 @@ class FantasyLeague:
         self.league_id = league_id
         self.season_id = season_id
         if download:
+            print('Downloading boxscores and scoreboards from ESPN')
             self.download_espn_league_results()
         print('Loading boxscores and scoreboards')
         self.load_league_results()
         print('Extracting player_df')
         self.player_df = self._build_player_df()
         print('Calculating manager rankings')
-        self.manager_rankings = self.calculate_manager_rankings()
+        self.manager_rankings = self.calculate_manager_rankings(current_week)
 
     """
     ------- DATA INITIALIZATION ------
@@ -244,5 +245,28 @@ class FantasyLeague:
     """
     ----- VISUALIZATIONS ----
     """
+    def plot_manager_rankings(self):
+        """
+        These are pretty rough... need to be improved
+        """
+        manager_rankings = self.manager_rankings
+        manager_rankings['week'] = manager_rankings['week'].astype(int)
+        manager_rankings = manager_rankings.sort_values(by='week')
+        manager_rankings.to_csv('manager_rankings.csv', index=False)
+        # Plot of deltas
+        fig, ax = plt.subplots()
+        for team, grp in manager_rankings.groupby('teamAbbrev'):
+            ax.plot(grp['week'], grp['ptDelta'], 'o-', label=team)
+        ax.set_xlabel('NFL Week')
+        ax.set_ylabel('Points Failed to Start (Best Ball - Actual)')
+        ax.legend()
+        # Plot of realization
+        fig, ax = plt.subplots()
+        for team, grp in manager_rankings.groupby('teamAbbrev'):
+            ax.plot(grp['week'], grp['realization'], 'o-', label=team)
+        ax.set_xlabel('NFL Week')
+        ax.set_ylabel('% Of Potential Started (Actual / Best Ball)')
+        ax.legend()
+
 if __name__ == '__main__':
     ADL = FantasyLeague(57456, 2018, download=False)
