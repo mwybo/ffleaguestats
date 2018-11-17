@@ -21,8 +21,12 @@ class FantasyLeague:
         self.season_id = season_id
         if download:
             self.download_espn_league_results()
+        print('Loading boxscores and scoreboards')
         self.load_league_results()
+        print('Extracting player_df')
         self.player_df = self._build_player_df()
+        print('Calculating manager rankings')
+        self.manager_rankings = self.calculate_manager_rankings()
 
     """
     ------- DATA INITIALIZATION ------
@@ -199,8 +203,46 @@ class FantasyLeague:
     """
     ----- CALCULATIONS ----
     """
-    # def calculate_manager_rankings(self):
+    def calculate_manager_rankings(self, current_week=16):
+        sbs = self.boxscores.copy()
+        bss = self.boxscores.copy()
 
+        df = self.player_df
 
+        manager_rankings = pd.DataFrame(columns=['week', 'teamAbbrev', 'bestBall', 'actual', 'realization'])
+        teams = df['teamAbbrev'].unique()
+        roster = {'QB': 1, 'RB': 2, 'WR': 3, 'TE': 1, 'D/ST': 1, 'FLX': 2}
+        for week, all_players in df.groupby('matchupPeriodId'):
+            if int(week) >= current_week:
+                continue
+            for team, players in all_players.groupby('teamAbbrev'):
+                # 20 is bench, 21 is IR
+                starters = players.loc[~(players['slotId'].isin([20, 21]))]
+                starters_score = starters['appliedStatTotal'].sum() \
+                    # Init the best ball score, start to loop thru the roster
+                best_ball_score = 0
+                for pos_id, num_start in roster.items():
+                    if pos_id is not 'FLX':
+                        pos = players.loc[players['position'] == pos_id]
+                    else:
+                        pos = players.loc[players['position'].isin(['WR', 'RB'])]
+                    # Get the best in the position
+                    best_in_pos = pos.sort_values(by='appliedStatTotal', ascending=False)[:num_start]
+                    # Remove from the players dictionary above so they can't be used again when we get to flx
+                    players = players.drop(best_in_pos.index)
+                    best_ball_score += best_in_pos['appliedStatTotal'].sum()
+                delta = best_ball_score - starters_score
+                realization = starters_score / best_ball_score
+                manager_rankings = manager_rankings.append({'week': week,
+                                                            'teamAbbrev': team,
+                                                            'bestBall': best_ball_score,
+                                                            'actual': starters_score,
+                                                            'realization': realization,
+                                                            'ptDelta': delta}, ignore_index=True)
+        manager_rankings['week'] = manager_rankings['week'].astype(int)
+        return manager_rankings
+    """
+    ----- VISUALIZATIONS ----
+    """
 if __name__ == '__main__':
     ADL = FantasyLeague(57456, 2018, download=False)
