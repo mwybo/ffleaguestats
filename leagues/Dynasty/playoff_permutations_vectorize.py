@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # Going to manually simulate for now
     weeks_remain = 2
     matches = [#'MW:TC', 'SL:BS', 'CM:SS', 'JL:CV', 'JK:TK', 'JZ:TG',  # WEEK 10
-               #'SS:MW', 'TC:SL', 'CV:CM', 'TK:JL', 'JZ:JK', 'BS:TG',  # WEEK 11
+               'SS:MW', 'TC:SL', 'CV:CM', 'TK:JL', 'JZ:JK', 'BS:TG',  # WEEK 11
                'CV:MW', 'SS:SL', 'TK:CM', 'JZ:JL', 'BS:JK', 'TC:TG',  # WEEK 12
                'MW:TK', 'SL:CV', 'CM:JZ', 'JL:BS', 'JK:TC', 'TG:SS']  # WEEK 13
 
@@ -102,8 +102,11 @@ if __name__ == '__main__':
         tmp.loc[tmp.iloc[0:6].index.values, 'playoff'] = 1
         return tmp['playoff']
 
+    from tqdm import tqdm
+    tqdm.pandas()
+
     start = time.time()
-    df_playoff = df_w.apply(rank_playoff, axis=1)
+    df_playoff = df_w.progress_apply(rank_playoff, axis=1)
     print('Completed in', (time.time()-start))
     df_playoff_pct = 100 * (df_playoff.sum() / len(df_playoff))
     df_playoff_pct = df_playoff_pct.sort_values(ascending=False)
