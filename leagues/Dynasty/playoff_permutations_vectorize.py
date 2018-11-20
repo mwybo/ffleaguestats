@@ -48,6 +48,7 @@ if __name__ == '__main__':
         playoff_chances[team.name] = 0
 
     # Going to manually simulate for now
+    weeks_remain = 2
     matches = [#'MW:TC', 'SL:BS', 'CM:SS', 'JL:CV', 'JK:TK', 'JZ:TG',  # WEEK 10
                # 'SS:MW', 'TC:SL', 'CV:CM', 'TK:JL', 'JZ:JK', 'BS:TG',  # WEEK 11
                'CV:MW', 'SS:SL', 'TK:CM', 'JZ:JL', 'BS:JK', 'TC:TG',  # WEEK 12
@@ -58,45 +59,56 @@ if __name__ == '__main__':
     format_str = '0{}b'.format(matchups_remain)  # will formaat a binary string that simulates every match
 
     print('Simulating %s combinations' % combos)
+    # Generate all of the outcomes to the matches
+    binary_list = []
     for i in range(0, combos):  # loop thru all of the combinations of possible matches
         if i%1000 == 0:
             print('Completed %s simulations' % i)
 
         binary_str = format(i, format_str)
-        teams = init_teams()
+        binary_list.append([int(x) for x in binary_str])
 
-        # Now go thru each digit of the binary, where each digit is a match, and simulate
-        for i_match, outcome in enumerate(binary_str):
-            t1, t2 = matches[i_match].split(':')
-            if outcome == '0':
-                teams[t1].wins += 1
-                teams[t2].losses += 1
-            else:
-                teams[t2].wins += 1
-                teams[t1].losses += 1
+    df_outcomes = pd.DataFrame(data=binary_list, columns=matches)
 
-        # print('Simulation %s' % i)
-        # for k, t in teams.items():
-        #     print(t.name, t.wins, t.losses)
+    # Now lets turn that in to wins and losses
+    df_w = pd.DataFrame(data=np.zeros((len(df_outcomes), len(ADL_teams.keys()))), columns=ADL_teams.keys())
 
-        # Cram the results into a df for easy sorting
-        df = pd.DataFrame()
-        for key, team in teams.items():
-            df = df.append(team.dump_to_df())
-        df = df.sort_values(by=['wins', 'points_for'], ascending=False)
-        df = df.reset_index(drop=True)
-        df_top6 = df.iloc[0:6]
-        playoff_teams = list(df_top6['name'])
-        for t in playoff_teams:
-            playoff_chances[t] += 1
+    for match_str in df_outcomes.columns:
+        match = df_outcomes[match_str]
+        t1 = match_str.split(':')[0]
+        t2 = match_str.split(':')[1]
 
-    # Now that I'm thru it all, lets display playoff chances
-    playoff_pct = {}
-    for k, t in playoff_chances.items():
-        playoff_pct[k] = np.round((t / combos) * 100, 2)
-    playoff_pct = pd.Series(playoff_pct)
-    playoff_pct = playoff_pct.sort_values(ascending=False)
+        df_w.loc[match == 0, t1] += 1
+        df_w.loc[match == 1, t2] += 1
 
+    # # Imply the wins from the losses
+    # df_l = pd.DataFrame(data=np.zeros((len(df_outcomes), len(ADL_teams.keys()))), columns=ADL_teams.keys())
+    # df_l = (df_w - weeks_remain)
+    # df_l = df_l.abs()
 
+    # Come up with the final records.. in an even league I only need wins
+    for t in df_w.columns:
+        df_w[t] = df_w[t] + ADL_teams[t].wins
+
+    df_points = pd.DataFrame(data=[[x.points_for for x in ADL_teams.values()]], columns=ADL_teams.keys())
+    df_points = df_points.transpose()
+    df_points.columns = ['points']
+
+    df_playoff = pd.DataFrame(data=np.zeros((len(df_outcomes), len(ADL_teams.keys()))), columns=ADL_teams.keys())
+
+    for i in range(len(df_w)):
+        if i%1000 == 0:
+            print('Completed %s simulations' % i)
+        df_sim = pd.DataFrame(df_w.iloc[i])
+        df_sim.columns = ['wins']
+        df_sim = df_sim.join(df_points).sort_values(by=['wins', 'points'], ascending=False)
+
+        df_in = df_sim.iloc[0:6]
+
+        df_playoff.loc[i, df_in.index.tolist()] += 1
+
+    df_playoff_pct = 100 * (df_playoff.sum() / len(df_playoff))
+    df_playoff_pct = df_playoff_pct.sort_values(ascending=False)
+    print(df_playoff_pct)
 
     print('Completed in', (time.time()-start))
