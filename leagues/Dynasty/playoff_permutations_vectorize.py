@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # Going to manually simulate for now
     weeks_remain = 2
     matches = [#'MW:TC', 'SL:BS', 'CM:SS', 'JL:CV', 'JK:TK', 'JZ:TG',  # WEEK 10
-               # 'SS:MW', 'TC:SL', 'CV:CM', 'TK:JL', 'JZ:JK', 'BS:TG',  # WEEK 11
+               #'SS:MW', 'TC:SL', 'CV:CM', 'TK:JL', 'JZ:JK', 'BS:TG',  # WEEK 11
                'CV:MW', 'SS:SL', 'TK:CM', 'JZ:JL', 'BS:JK', 'TC:TG',  # WEEK 12
                'MW:TK', 'SL:CV', 'CM:JZ', 'JL:BS', 'JK:TC', 'TG:SS']  # WEEK 13
 
@@ -69,6 +69,7 @@ if __name__ == '__main__':
         binary_list.append([int(x) for x in binary_str])
 
     df_outcomes = pd.DataFrame(data=binary_list, columns=matches)
+    del binary_list
 
     # Now lets turn that in to wins and losses
     df_w = pd.DataFrame(data=np.zeros((len(df_outcomes), len(ADL_teams.keys()))), columns=ADL_teams.keys())
@@ -81,11 +82,6 @@ if __name__ == '__main__':
         df_w.loc[match == 0, t1] += 1
         df_w.loc[match == 1, t2] += 1
 
-    # # Imply the wins from the losses
-    # df_l = pd.DataFrame(data=np.zeros((len(df_outcomes), len(ADL_teams.keys()))), columns=ADL_teams.keys())
-    # df_l = (df_w - weeks_remain)
-    # df_l = df_l.abs()
-
     # Come up with the final records.. in an even league I only need wins
     for t in df_w.columns:
         df_w[t] = df_w[t] + ADL_teams[t].wins
@@ -93,22 +89,22 @@ if __name__ == '__main__':
     df_points = pd.DataFrame(data=[[x.points_for for x in ADL_teams.values()]], columns=ADL_teams.keys())
     df_points = df_points.transpose()
     df_points.columns = ['points']
+    del df_outcomes
 
-    df_playoff = pd.DataFrame(data=np.zeros((len(df_outcomes), len(ADL_teams.keys()))), columns=ADL_teams.keys())
+    def rank_playoff(x):
+        """
+        x is a pandas DataFrame Row
+        """
+        tmp = pd.DataFrame(data=x)
+        tmp.columns = ['wins']
+        tmp = tmp.join(df_points).sort_values(by=['wins', 'points'], ascending=False)
+        tmp['playoff'] = 0
+        tmp.loc[tmp.iloc[0:6].index.values, 'playoff'] = 1
+        return tmp['playoff']
 
-    for i in range(len(df_w)):
-        if i%1000 == 0:
-            print('Completed %s simulations' % i)
-        df_sim = pd.DataFrame(df_w.iloc[i])
-        df_sim.columns = ['wins']
-        df_sim = df_sim.join(df_points).sort_values(by=['wins', 'points'], ascending=False)
-
-        df_in = df_sim.iloc[0:6]
-
-        df_playoff.loc[i, df_in.index.tolist()] += 1
-
+    start = time.time()
+    df_playoff = df_w.apply(rank_playoff, axis=1)
+    print('Completed in', (time.time()-start))
     df_playoff_pct = 100 * (df_playoff.sum() / len(df_playoff))
     df_playoff_pct = df_playoff_pct.sort_values(ascending=False)
     print(df_playoff_pct)
-
-    print('Completed in', (time.time()-start))
