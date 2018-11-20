@@ -3,6 +3,9 @@ from copy import deepcopy
 import pandas as pd
 import numpy as np
 import time
+import dask.dataframe as dd
+from dask.multiprocessing import get
+import timeit
 
 class Team:
     def __init__(self, wins=0, losses=0, name=None, ID=None, points_for=0):
@@ -50,7 +53,7 @@ if __name__ == '__main__':
     # Going to manually simulate for now
     weeks_remain = 2
     matches = [#'MW:TC', 'SL:BS', 'CM:SS', 'JL:CV', 'JK:TK', 'JZ:TG',  # WEEK 10
-               'SS:MW', 'TC:SL', 'CV:CM', 'TK:JL', 'JZ:JK', 'BS:TG',  # WEEK 11
+               #'SS:MW', 'TC:SL', 'CV:CM', 'TK:JL', 'JZ:JK', 'BS:TG',  # WEEK 11
                'CV:MW', 'SS:SL', 'TK:CM', 'JZ:JL', 'BS:JK', 'TC:TG',  # WEEK 12
                'MW:TK', 'SL:CV', 'CM:JZ', 'JL:BS', 'JK:TC', 'TG:SS']  # WEEK 13
 
@@ -105,9 +108,15 @@ if __name__ == '__main__':
     from tqdm import tqdm
     tqdm.pandas()
 
+    # start = time.time()
+    # df_playoff = df_w.progress_apply(rank_playoff, axis=1)
+    # print('Completed in', (time.time()-start))
+    df_w_dsk = dd.from_pandas(df_w, npartitions=12)
+
     start = time.time()
-    df_playoff = df_w.progress_apply(rank_playoff, axis=1)
+    df_playoff_dsk = df_w_dsk.map_partitions(lambda df: df.apply((lambda row: rank_playoff(row)), axis=1)).compute(get=get)
     print('Completed in', (time.time()-start))
+
     df_playoff_pct = 100 * (df_playoff.sum() / len(df_playoff))
     df_playoff_pct = df_playoff_pct.sort_values(ascending=False)
     print(df_playoff_pct)
