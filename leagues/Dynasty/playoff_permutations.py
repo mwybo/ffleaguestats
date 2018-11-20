@@ -27,19 +27,18 @@ def removekey(d, key):
     return r
 
 if __name__ == '__main__':
-    # prelim 1118
-    ADL_teams = dict(JK=Team(8, 3, 'Threat Level Midnight', 'JK', 1355),
-                     TG=Team(9, 2, 'The Flu Draft', 'TG', 1332.4),
-                     BS=Team(7, 4, 'Britton\'s Team', 'BS', 1314.2),
-                     CV=Team(5, 6, 'Team Vinson', 'CV', 1199.9),
-                     SL=Team(6, 5, 'Team Loreaux', 'SL', 1225.1),
-                     TK=Team(5, 6, 'Team Kuck', 'TK', 1094.3),
+    ADL_teams = dict(JK=Team(8, 3, 'Threat Level Midnight', 'JK', 1466.6),
+                     TG=Team(9, 2, 'The Flu Draft', 'TG', 1471.9),
+                     BS=Team(7, 4, 'Britton\'s Team', 'BS', 1451.3),
+                     CV=Team(5, 6, 'Team Vinson', 'CV', 1288.1),
+                     SL=Team(6, 5, 'Team Loreaux', 'SL', 1331.4),
+                     TK=Team(5, 6, 'Team Kuck', 'TK', 1220.4),
                      CM=Team(5, 6, 'Matre\'s Team', 'CM', 1040),
-                     JL=Team(5, 6, 'Education Nation', 'JL', 1077.3),
-                     JZ=Team(4, 7, 'Zippy Something', 'JZ', 1233.7),
-                     MW=Team(5, 6, 'Atleast I Have FanDuel', 'MW', 1227.5),
-                     SS=Team(4, 7, 'Team Rockstar', 'SS', 1171.3),
-                     TC=Team(3, 8, 'Cincinnati Indians', 'TC', 1098.7)
+                     JL=Team(5, 6, 'Education Nation', 'JL', 1189.6),
+                     JZ=Team(4, 7, 'Zippy Something', 'JZ', 1350.6),
+                     MW=Team(5, 6, 'Atleast I Have FanDuel', 'MW', 1390.4),
+                     SS=Team(4, 7, 'Team Rockstar', 'SS', 1257.2),
+                     TC=Team(3, 8, 'Cincinnati Indians', 'TC', 1191.6)
                      )
 
     playoff_chances = {}
