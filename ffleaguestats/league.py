@@ -269,4 +269,4 @@ class FantasyLeague:
         ax.legend()
 
 if __name__ == '__main__':
-    ADL = FantasyLeague(57456, 2018, download=False)
+    ADL = FantasyLeague(57456, 2018, download=True)

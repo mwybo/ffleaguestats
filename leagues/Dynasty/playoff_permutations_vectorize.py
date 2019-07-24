@@ -29,18 +29,18 @@ def removekey(d, key):
 
 if __name__ == '__main__':
     start = time.time()
-    ADL_teams = dict(JK=Team(8, 3, 'Threat Level Midnight', 'JK', 1466.6),
-                     TG=Team(9, 2, 'The Flu Draft', 'TG', 1471.9),
-                     BS=Team(7, 4, 'Britton\'s Team', 'BS', 1451.3),
-                     CV=Team(5, 6, 'Team Vinson', 'CV', 1288.1),
-                     SL=Team(6, 5, 'Team Loreaux', 'SL', 1331.4),
-                     TK=Team(5, 6, 'Team Kuck', 'TK', 1220.4),
-                     CM=Team(5, 6, 'Matre\'s Team', 'CM', 1040),
-                     JL=Team(5, 6, 'Education Nation', 'JL', 1189.6),
-                     JZ=Team(4, 7, 'Zippy Something', 'JZ', 1350.6),
-                     MW=Team(5, 6, 'Atleast I Have FanDuel', 'MW', 1390.4),
-                     SS=Team(4, 7, 'Team Rockstar', 'SS', 1257.2),
-                     TC=Team(3, 8, 'Cincinnati Indians', 'TC', 1191.6)
+    ADL_teams = dict(JK=Team(8, 4, 'Threat Level Midnight', 'JK', 1598.4),
+                     TG=Team(9, 3, 'The Flu Draft', 'TG', 1603.4),
+                     BS=Team(8, 4, 'Britton\'s Team', 'BS', 1659.8),
+                     CV=Team(6, 6, 'Team Vinson', 'CV', 1398.1),
+                     SL=Team(7, 5, 'Team Loreaux', 'SL', 1449.1),
+                     TK=Team(6, 6, 'Team Kuck', 'TK', 1356.1),
+                     CM=Team(5, 7, 'Matre\'s Team', 'CM', 1262.7),
+                     JL=Team(6, 6, 'Education Nation', 'JL', 1291.1),
+                     JZ=Team(4, 8, 'Zippy Something', 'JZ', 1439.3),
+                     MW=Team(5, 7, 'Atleast I Have FanDuel', 'MW', 1487.6),
+                     SS=Team(4, 8, 'Team Rockstar', 'SS', 1337.7),
+                     TC=Team(4, 8, 'Cincinnati Indians', 'TC', 1339.9)
                      )
 
     playoff_chances = {}
@@ -50,8 +50,8 @@ if __name__ == '__main__':
     # Going to manually simulate for now
     weeks_remain = 2
     matches = [#'MW:TC', 'SL:BS', 'CM:SS', 'JL:CV', 'JK:TK', 'JZ:TG',  # WEEK 10
-               'SS:MW', 'TC:SL', 'CV:CM', 'TK:JL', 'JZ:JK', 'BS:TG',  # WEEK 11
-               'CV:MW', 'SS:SL', 'TK:CM', 'JZ:JL', 'BS:JK', 'TC:TG',  # WEEK 12
+               #'SS:MW', 'TC:SL', 'CV:CM', 'TK:JL', 'JZ:JK', 'BS:TG',  # WEEK 11
+               #'CV:MW', 'SS:SL', 'TK:CM', 'JZ:JL', 'BS:JK', 'TC:TG',  # WEEK 12
                'MW:TK', 'SL:CV', 'CM:JZ', 'JL:BS', 'JK:TC', 'TG:SS']  # WEEK 13
 
     matchups_remain = len(matches)  # number of total matches left
