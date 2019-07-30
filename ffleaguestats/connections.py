@@ -9,10 +9,27 @@ import matplotlib.pyplot as plt
 import os
 import time
 
+
 class BaseConnection:
     def __init__(self, league_id, season_id):
         self.league_id = league_id
         self.season_id = season_id
+
+
+class FantasyProsDraftRankings:
+    def __init__(self, scoring):
+        if scoring not in ['standard', 'ppr', 'half-ppr']:
+            raise Exception('Must selecte standard, ppr, half-ppr for arg scoring')
+        self.scoring = scoring
+        if scoring == 'half-ppr':
+            self.url = 'https://www.fantasypros.com/nfl/rankings/half-point-ppr-cheatsheets.php'
+
+    def retrieve_df(self):
+        print('Retrieving %s projections from FantasyPros' % self.scoring)
+        df_season = pd.read_html(self.url)[0]
+        # Remove headers
+        df_season = df_season.loc[~df_season['Rank'].str.contains('Tier'), :]
+        return df_season
 
 
 class SleeperConnection(BaseConnection):
@@ -47,7 +64,7 @@ class SleeperConnection(BaseConnection):
             if week == 16:
                 print('')
             matchups = requests.get('https://api.sleeper.app/v1/league/%s/matchups/%s' % (self.league_id, week))
-            self.matchups.update(json.loads(matchups.content.decode('utf-8')))
+            self.matchups[str(week)] = json.loads(matchups.content.decode('utf-8'))
 
     def _download_rosters(self):
         print('Downloading Rosters...')
@@ -86,6 +103,9 @@ class SleeperConnection(BaseConnection):
             week_stats = requests.get('https://api.sleeper.app/v1/stats/nfl/regular/%s/%s' % (self.season_id, week))
             tmp = {str(week): json.loads(week_stats.content.decode('utf-8'))}
             self.player_stats.update(tmp)
+
+
+
 
 class ESPNConnection:
     def __init__(self, league_id, season_id, **kwargs):
@@ -133,5 +153,8 @@ class ESPNConnection:
 
 
 if __name__ == '__main__':
-    conn = SleeperConnection(league_id=402964075534880768, season_id=2018)
-    conn.download()
+    # conn = SleeperConnection(league_id=402964075534880768, season_id=2018)
+    # conn.download()
+
+    fp = FantasyProsDraftRankings('half-ppr')
+    df = fp.retrieve_df()
